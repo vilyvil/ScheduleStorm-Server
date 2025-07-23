@@ -415,7 +415,7 @@ class University(threading.Thread):
         # Check if this Uni supports faculties
         supportsFaculties = False
 
-        facultyCount = self.db.Subjects.find({"uni": self.settings["uniID"], "faculty": {"$exists": True}}).count()
+        facultyCount = len(list(self.db.Subjects.find({"uni": self.settings["uniID"], "faculty": {"$exists": True}})))
 
         if facultyCount > 0:
             supportsFaculties = True
