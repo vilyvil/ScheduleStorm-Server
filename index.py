@@ -51,7 +51,7 @@ class v1Unis():
 
         # set the etag and body
         resp.etag = "W/" + hashlib.sha1(str_response).hexdigest()
-        resp.body = str_response
+        resp.text = str_response
 
 class v1GetAllUniTermSubjects():
     """
@@ -63,7 +63,7 @@ class v1GetAllUniTermSubjects():
             if uniThreads[uni].isScraping:
                 # we don't want to return data while scraping, send error (configure nginx to send stale data if it can)
                 resp.status = falcon.HTTP_500
-                resp.body = json.dumps(
+                resp.text = json.dumps(
                     {"error": "We're currently scraping this university, please check back in a couple minutes!"}
                 ).encode('utf-8')
             else:
@@ -72,11 +72,11 @@ class v1GetAllUniTermSubjects():
 
                 # set the etag and body
                 resp.etag = "W/" + hashlib.sha1(subject_list).hexdigest()
-                resp.body = subject_list
+                resp.text = subject_list
         else:
             # Couldn't find the uni or term, send error
             resp.status = falcon.HTTP_400
-            resp.body = json.dumps(
+            resp.text = json.dumps(
                 {"error": "The specified university or term was not found"}
             ).encode('utf-8')
 
@@ -157,5 +157,5 @@ if __name__ == '__main__':
 
     # It is highly recommended to put this API behind a proxy such as nginx with heavy caching
     log.info("Setting up API server on port " + str(settings["port"]))
-    httpd = simple_server.make_server('0.0.0.0', settings["port"], app)
+    httpd = simple_server.make_server('localhost', settings["port"], app)
     httpd.serve_forever()
