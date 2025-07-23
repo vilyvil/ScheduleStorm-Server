@@ -148,7 +148,7 @@ class University(threading.Thread):
 
         :return:
         """
-        self.db.Terms.update({"uni": self.settings["uniID"]}, {"$set": {"enabled": False}}, upsert=False, multi=True)
+        self.db.Terms.update_many({"uni": self.settings["uniID"]}, {"$set": {"enabled": False}}, upsert=False)
 
     def updateTerm(self, term):
         """
@@ -162,7 +162,7 @@ class University(threading.Thread):
         term["enabled"] = True
         term["uni"] = self.settings["uniID"]
 
-        self.db.Terms.update(
+        self.db.Terms.update_one(
             {
                 "id": term["id"],
                 "uni": term["uni"]
@@ -194,7 +194,7 @@ class University(threading.Thread):
             self.log.critical("Course description doesn't have both subject and coursenum keys")
         else:
             coursedesc["uni"] = self.settings["uniID"]
-            self.db.CourseDesc.update(
+            self.db.CourseDesc.update_one(
                 {
                     "coursenum": coursedesc["coursenum"],
                     "subject": coursedesc["subject"],
@@ -236,7 +236,7 @@ class University(threading.Thread):
             subject["uni"] = self.settings["uniID"]
 
             # Update the subject data in the DB
-            self.db.Subjects.update(
+            self.db.Subjects.update_one(
                 {
                     "subject": subject["subject"],
                     "uni": subject["uni"]
@@ -295,7 +295,7 @@ class University(threading.Thread):
             # force term to be a string
             classobj["term"] = str(classobj["term"])
 
-            self.db.ClassList.update(
+            self.db.ClassList.update_one(
                 {
                     "id": classobj["id"],
                     "term": classobj["term"],
