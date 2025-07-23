@@ -15,6 +15,12 @@ import logging
 import traceback
 from .University import University
 
+from selenium import webdriver
+from selenium.common import NoSuchElementException
+from selenium.webdriver.common.by import By
+from selenium.webdriver.support.wait import WebDriverWait
+from selenium.webdriver.support import expected_conditions
+
 
 log = logging.getLogger("UCalgary")
 
@@ -49,36 +55,111 @@ class UCalgary(University):
         :return: **boolean** Defines whether we successfully logged in or not
         """
 
-        log.info("Logging into MyUofC")
+        driver = webdriver.Chrome()
+        wait = WebDriverWait(driver, timeout=10)
 
-        payload = {"username": self.settings["username"],
-                   "password": self.settings["password"],
-                   "lt": "ScheduleStorm",
-                   "Login": "Sign+In"}
+        # Log in
+        driver.get("https://my.ucalgary.ca")
 
-        r = self.loginSession.post("https://cas.ucalgary.ca/cas/login?service="
-                                   "https://portal.my.ucalgary.ca/psp/paprd/?cmd=start&ca.ucalgary.authent.ucid=true",
-                                   data=payload,
-                                   verify=verifyRequests)
+        initial_button = driver.find_element(by=By.CSS_SELECTOR, value="[aria-label='Continue with your IT account']")
+        initial_button.click()
 
-        # UCalgary has improper HTTP status codes, we can't use them (200 for invalid login etc...)
-        # We'll have to scan the text to see whether we logged in or not
-        if "invalid username or password" not in r.text:
-            # Parse the form data
-            payload = self.getHiddenInputPayload(r.text)
+        # Username
+        wait.until(expected_conditions.element_to_be_clickable((By.NAME, "loginfmt")))
+        username_field = driver.find_element(by=By.NAME, value="loginfmt")
+        username_field.send_keys(self.settings["username"])
+        next_button = driver.find_element(by=By.ID, value="idSIButton9")
+        next_button.click()
 
+        # Password
+        wait.until(expected_conditions.element_to_be_clickable((By.NAME, "passwd")))
+        password_field = driver.find_element(by=By.NAME, value="passwd")
+        password_field.send_keys(self.settings["password"])
+        sign_in_button = driver.find_element(By.CSS_SELECTOR, "input[value*='Sign in']")
+        sign_in_button.click()
 
-            r = self.loginSession.post("https://portal.my.ucalgary.ca/psp/paprd/?cmd=start", data=payload, verify=verifyRequests)
+        # MFA
+        wait.until(expected_conditions.element_to_be_clickable((By.ID, "signInAnotherWay")))
+        another_way = driver.find_element(By.ID, "signInAnotherWay")
+        another_way.click()
 
-            if "My class schedule" in r.text:
-                # We probably logged in, it's hard to tell without HTTP status codes
-                log.info("Successfully logged into MyUofC")
-                return True
-            else:
-                return False
-        else:
-            log.error("Invalid Username or Password to MyUofC")
-            return False
+        wait.until(expected_conditions.element_to_be_clickable((By.XPATH, "//div[@data-value='PhoneAppOTP']")))
+        ente_otp_button = driver.find_element(By.XPATH, "//div[@data-value='PhoneAppOTP']")
+        ente_otp_button.click()
+
+        wait.until(expected_conditions.element_to_be_clickable((By.ID, "idTxtBx_SAOTCC_OTC")))
+        code_field = driver.find_element(By.ID, "idTxtBx_SAOTCC_OTC")
+        code_field.send_keys(self.get_ente_code())
+
+        verify_button = driver.find_element(By.ID, "idSubmit_SAOTCC_Continue")
+        verify_button.click()
+
+        wait.until(expected_conditions.element_to_be_clickable((By.ID, "idSIButton9")))
+        stay_signed_in = driver.find_element(By.ID, "idSIButton9")
+        stay_signed_in.click()
+
+        headers = {
+        "User-Agent":
+            "Mozilla/5.0 (Windows NT 6.3; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/44.0.2403.157 Safari/537.36"
+        }
+        self.loginSession.headers.update(headers)
+
+        for cookie in driver.get_cookies():
+            c = {cookie['name']: cookie['value']}
+            self.loginSession.cookies.update(c)
+
+        wait.until(expected_conditions.element_to_be_clickable((By.CLASS_NAME, "is_newsContent")))
+
+        driver.quit()
+
+        # Always returns true for now
+        return True
+
+    def get_ente_code(self):
+        driver = webdriver.Chrome()
+        wait = WebDriverWait(driver, timeout=10)
+
+        # Open ente
+        driver.get("https://auth.ente.io")
+
+        wait.until(expected_conditions.element_to_be_clickable((By.CLASS_NAME, "css-1qqmy2s")))
+        header = driver.find_element(By.CLASS_NAME, "css-1qqmy2s")
+
+        if header.text == "Login": # When ente doesn't know our email yet (it sends us to /login path)
+            # Email
+            wait.until(expected_conditions.element_to_be_clickable((By.NAME, "email")))
+            email_field = driver.find_element(By.NAME, "email")
+            email_field.send_keys(self.settings["mfausername"])
+
+            login_button = driver.find_element(By.CLASS_NAME, "css-1v3mts8")
+            login_button.click()
+
+            # Password
+            wait.until(expected_conditions.element_to_be_clickable((By.NAME, "password")))
+            pass_field = driver.find_element(By.NAME, "password")
+            pass_field.send_keys(self.settings["mfapassword"])
+
+            signin_button = driver.find_element(By.CLASS_NAME, "css-1v3mts8")
+            signin_button.click()
+        elif header.text == "Password": # When ente already knows our email (it sends us to /credentials path)
+            # Password
+            wait.until(expected_conditions.element_to_be_clickable((By.NAME, "password")))
+            pass_field = driver.find_element(By.NAME, "password")
+            pass_field.send_keys(self.settings["mfapassword"])
+
+            signin_button = driver.find_element(By.CLASS_NAME, "css-1v3mts8")
+            signin_button.click()
+
+        wait.until(expected_conditions.element_to_be_clickable((By.CLASS_NAME, "css-1ikf9cp")))
+        code = self.get_MFA_from_ente_source(driver.page_source)
+        driver.quit()
+        return code
+
+    def get_MFA_from_ente_source(self, page_source):
+        soup = BeautifulSoup(page_source, 'html.parser')
+        mydivs = soup.find_all("h3", {"class": "css-y9ntft"})
+        # U of C is my third entry
+        return mydivs[2].getText().replace(" ", "")
 
     def getHiddenInputPayload(self, text):
         """
