@@ -1,3 +1,6 @@
 *.pyc
 .idea
 settings.json
+pyvenv.cfg
+Scripts
+Lib
