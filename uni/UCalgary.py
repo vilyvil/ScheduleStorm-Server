@@ -98,6 +98,8 @@ class UCalgary(University):
         stay_signed_in = driver.find_element(By.ID, "idSIButton9")
         stay_signed_in.click()
 
+        wait.until(expected_conditions.element_to_be_clickable((By.CLASS_NAME, "is_newsContent")))
+
         headers = {
         "User-Agent":
             "Mozilla/5.0 (Windows NT 6.3; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/44.0.2403.157 Safari/537.36"
@@ -107,8 +109,6 @@ class UCalgary(University):
         for cookie in driver.get_cookies():
             c = {cookie['name']: cookie['value']}
             self.loginSession.cookies.update(c)
-
-        wait.until(expected_conditions.element_to_be_clickable((By.CLASS_NAME, "is_newsContent")))
 
         driver.quit()
 
