@@ -303,8 +303,8 @@ class UCalgary(University):
         payload['SSR_CLSRCH_WRK_SSR_EXACT_MATCH1$1'] = "C"
         payload['SSR_CLSRCH_WRK_CATALOG_NBR$1'] = ""
         payload['SSR_CLSRCH_WRK_ACAD_CAREER$2'] = ""
-        payload['SSR_CLSRCH_WRK_SSR_OPEN_ONLY$chk$3'] = "Y"
-        payload['SSR_CLSRCH_WRK_SSR_OPEN_ONLY$3'] = "Y"
+        payload['SSR_CLSRCH_WRK_SSR_OPEN_ONLY$chk$3'] = "N"
+        payload['SSR_CLSRCH_WRK_SSR_OPEN_ONLY$3'] = "N"
         payload['SSR_CLSRCH_WRK_OEE_IND$chk$4'] = "N"
         payload['DERIVED_SSTSNAV_SSTS_MAIN_GOTO$8$'] = 9999
 
@@ -415,6 +415,10 @@ class UCalgary(University):
         elif "The search returns no results that match the criteria specified" in courselist.text:
             log.error("No courses for " + subjectid)
         else:
+            if subjectid == "JPNS":
+                with open("Output.txt", "a") as text_file:
+                    text_file.write("\n" + courselist.text)
+
             # We probably have the data we want
             self.parseRawCourseList(courselist.text, subjectid, termid)
 
