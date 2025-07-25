@@ -65,37 +65,31 @@ class UCalgary(University):
         initial_button.click()
 
         # Username
-        wait.until(expected_conditions.element_to_be_clickable((By.NAME, "loginfmt")))
-        username_field = driver.find_element(by=By.NAME, value="loginfmt")
+        username_field = wait.until(expected_conditions.element_to_be_clickable((By.NAME, "loginfmt")))
         username_field.send_keys(self.settings["username"])
         next_button = driver.find_element(by=By.ID, value="idSIButton9")
         next_button.click()
 
         # Password
-        wait.until(expected_conditions.element_to_be_clickable((By.NAME, "passwd")))
-        password_field = driver.find_element(by=By.NAME, value="passwd")
+        password_field = wait.until(expected_conditions.element_to_be_clickable((By.NAME, "passwd")))
         password_field.send_keys(self.settings["password"])
         sign_in_button = driver.find_element(By.CSS_SELECTOR, "input[value*='Sign in']")
         sign_in_button.click()
 
         # MFA
-        wait.until(expected_conditions.element_to_be_clickable((By.ID, "signInAnotherWay")))
-        another_way = driver.find_element(By.ID, "signInAnotherWay")
+        another_way = wait.until(expected_conditions.element_to_be_clickable((By.ID, "signInAnotherWay")))
         another_way.click()
 
-        wait.until(expected_conditions.element_to_be_clickable((By.XPATH, "//div[@data-value='PhoneAppOTP']")))
-        ente_otp_button = driver.find_element(By.XPATH, "//div[@data-value='PhoneAppOTP']")
+        ente_otp_button = wait.until(expected_conditions.element_to_be_clickable((By.XPATH, "//div[@data-value='PhoneAppOTP']")))
         ente_otp_button.click()
 
-        wait.until(expected_conditions.element_to_be_clickable((By.ID, "idTxtBx_SAOTCC_OTC")))
-        code_field = driver.find_element(By.ID, "idTxtBx_SAOTCC_OTC")
+        code_field = wait.until(expected_conditions.element_to_be_clickable((By.ID, "idTxtBx_SAOTCC_OTC")))
         code_field.send_keys(self.get_ente_code())
 
         verify_button = driver.find_element(By.ID, "idSubmit_SAOTCC_Continue")
         verify_button.click()
 
-        wait.until(expected_conditions.element_to_be_clickable((By.ID, "idSIButton9")))
-        stay_signed_in = driver.find_element(By.ID, "idSIButton9")
+        stay_signed_in = wait.until(expected_conditions.element_to_be_clickable((By.ID, "idSIButton9")))
         stay_signed_in.click()
 
         wait.until(expected_conditions.element_to_be_clickable((By.CLASS_NAME, "is_newsContent")))
