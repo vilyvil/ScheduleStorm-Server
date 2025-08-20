@@ -478,6 +478,7 @@ class UCalgary(University):
                     "teachers": classdiv.find("div", {"id": re.compile('win0divMTG_INSTR\$\d*')}).text.strip().replace(", ", "").split("\n"),
                     "group": classdiv.find("div", {"id": re.compile('win0divUCSS_E010_WRK_ASSOCIATED_CLASS\$\d*')}).text.strip(),
                     "status": classdiv.find("div", {"id": re.compile('win0divDERIVED_CLSRCH_SSR_STATUS_LONG\$\d*')}).find("img")["alt"],
+                    "section": classdiv.find("a", {"id": re.compile('MTG_CLASSNAME\$\d')}).text.split("\n")[0],
                     "restriction": restriction
                 }
 
